@@ -78,7 +78,9 @@ class SimpleLxcNode(PyCoreNode):
             raise Exception, ("command failed: %s" % vnoded)
         self.vnodeclient = vnodeclient.VnodeClient(self.name,
                                                    self.ctrlchnlname)
-        self.info("bringing up loopback interface")
+        self.info("running sysctl")
+	self.cmd(["sysctl","-p"])
+	self.info("bringing up loopback interface")
         self.cmd([IP_BIN, "link", "set", "lo", "up"])
         self.info("setting hostname: %s" % self.name)
         self.cmd(["hostname", self.name])
