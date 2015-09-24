@@ -711,6 +711,50 @@ atd
         
 addservice(AtdService)
 
+class DNSService(UtilService):
+    ''' Domain Name System service
+    '''
+    _name = "maradns"
+    _configs = ("mararc",)
+    _dirs = ("/etc/maradns")
+    _startup = ("maradns -f /etc/maradns/mararc", )
+    _shutdown = ("pkill maradns", )
+    
+    @classmethod
+    def generateconfig(cls, node, filename, services):      
+	cfg = "ipv4_bind_addresses = \""
+        ifcs = []
+        for ifc in node.netifs():
+            if hasattr(ifc, 'control') and ifc.control == True:
+                continue
+            ifcs.extend(filter(cls.isipv4address,ifc.addrlist))
+        cfg += ",".join(ifcs)+"\"\n"
+        ifcs = []
+        for ifc in node.netifs():
+            if hasattr(ifc, 'control') and ifc.control == True:
+                continue
+            ifcs.extend(filter(cls.isipv6address,ifc.addrlist))
+        if len(ifcs)>0:
+	    cfg += "ipv6_bind_addresses = \""
+            cfg += ",".join(ifcs)+"\"\n"
+        cfg += """
+chroot_dir = "/etc/maradns"
+csv2 = {}
+#csv2["example.domain."] = "db.example.domain"
+"""
+	return cfg
+
+    @staticmethod
+    def isipv4address(x):
+        return x.find(":") < 0
+        
+    @staticmethod
+    def isipv6address(x):
+        return x.find(":") >= 0
+
+addservice(DNSService)
+
+
 class UserDefinedService(UtilService):
     ''' Dummy service allowing customization of anything.
     '''
